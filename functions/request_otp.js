@@ -9,14 +9,14 @@ module.exports = (req,res) => {
     const phone = String(req.body.phone).replace(/[^\d]/g,'')
     
     return admin.auth().getUser(phone)
-        .then(user => {
+        .then(() => {
             const code = Math.floor(Math.random() * 899999 + 1000)
             return twilio.messages.create({
                 to: phone.replace('0','+44'),
                 from: '+14157671632',
                 body: `Your code is ${code}`
             }, err => {
-                if (err) { return res.status(422).send(err.message)}
+                if (err) res.status(422).send({error: err.message})
 
                 return admin.database().ref('users/' + phone)
                     .update({code, used: false}, ()=> {
