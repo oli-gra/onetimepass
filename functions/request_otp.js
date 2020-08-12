@@ -16,7 +16,7 @@ module.exports = (req,res) => {
                 from: '+14157671632',
                 body: `Your code is ${code}`
             }, err => {
-                if (err) res.status(422).send({error: err.message})
+                if (err) res.status(422).send({error: 'Check your number'})
 
                 return admin.database().ref('users/' + phone)
                     .update({code, used: false}, ()=> {
@@ -25,5 +25,5 @@ module.exports = (req,res) => {
             })
 
         })
-        .catch(err => res.status(422).send({error: err.message}))
+        .catch(() => res.status(422).send({error:'Number not found'}))
 } 

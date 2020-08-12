@@ -1,34 +1,34 @@
 const admin = require('firebase-admin')
 
 module.exports = (req,res) => {
-    if (!req.body.phone || !req.body.code) res.status(422).send({error: 'Phone and code needed!'})
+    if (!req.body.phone || !req.body.code) res.status(422).send({error: 'Number and code needed'})
 
     const phone = String(req.body.phone).replace(/[^\d]/g,'')
     const code = parseInt(req.body.code)
     const ref = admin.database().ref("users/" + phone)    
     
-    const error = err => res.status(422).send({error:err.message})
+    const error = () => res.status(422).send({error:'Check your code or resend'})
    
     const sendToken = () => admin.auth().createCustomToken(phone)
         .then(token => {
             ref.update({used:true})
             return res.status(200).send({token})
         })
-        .catch(err=>error(err))
+        .catch(error)
   
     const checkCode = () => {
         ref.once("value")
         .then(data=>{
             const user = data.val()      
             return user.code !== code || user.used 
-                ? res.status(422).send({error: 'Code invalid'})
+                ? error()
                 : sendToken()
         })
-        .catch(err=>error(err))
+        .catch(error)
     }
 
 
     admin.auth().getUser(phone)
         .then(()=>checkCode())
-        .catch(err=> error(err))    
+        .catch(() => res.status(422).send({error:'Number not found'}))    
 }
